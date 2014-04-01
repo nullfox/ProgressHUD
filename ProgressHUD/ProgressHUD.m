@@ -21,6 +21,25 @@
 
 #import "ProgressHUD.h"
 
+@interface ProgressHUD ()
+
+@property (nonatomic, strong) UIColor *statusColor;
+@property (nonatomic, strong) UIColor *spinnerColor;
+@property (nonatomic, strong) UIColor *hudBackgroundColor;
+@property (nonatomic, strong) UIImage *successImage;
+@property (nonatomic, strong) UIImage *errorImage;
+
+@property (nonatomic, assign) BOOL interaction;
+
+@property (nonatomic, strong) UIWindow *window;
+@property (nonatomic, strong) UIView *background;
+@property (nonatomic, strong) UIToolbar *hud;
+@property (nonatomic, strong) UIActivityIndicatorView *spinner;
+@property (nonatomic, strong) UIImageView *image;
+@property (nonatomic, strong) UILabel *label;
+
+@end
+
 @implementation ProgressHUD
 
 @synthesize interaction, window, background, hud, spinner, image, label;
@@ -32,9 +51,43 @@
 	static dispatch_once_t once = 0;
 	static ProgressHUD *progressHUD;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	dispatch_once(&once, ^{ progressHUD = [[ProgressHUD alloc] init]; });
+	dispatch_once(&once, ^{
+        progressHUD = [[ProgressHUD alloc] init];
+        [progressHUD setStyle:kStyleBlack];
+    });
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	return progressHUD;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
++ (void)setStyle:(ProgressHUDStyle)style
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	switch(style) {
+        case: kStyleWhite:
+            self.statusColor = [UIColor whiteColor];
+            self.spinnerColor = [UIColor whiteColor];
+            self.backgroundColor = [UIColor colorWithWhite:0 alpha:0.8];
+            self.successImage = [UIImage imageNamed:@"ProgressHUD.bundle/success-white.png"];
+            self.errorImage = [UIImage imageNamed:@"ProgressHUD.bundle/error-white.png"];
+            break;
+            
+        case: kStyleBlack:
+            self.statusColor = [UIColor blackColor];
+            self.spinnerColor = [UIColor blackColor];
+            self.backgroundColor = [UIColor colorWithWhite:0 alpha:0.1];
+            self.successImage = [UIImage imageNamed:@"ProgressHUD.bundle/success-black.png"];
+            self.errorImage = [UIImage imageNamed:@"ProgressHUD.bundle/error-black.png"];
+            break;
+            
+        case: kStyleColor:
+            self.statusColor = [UIColor blackColor];
+            self.spinnerColor = [UIColor blackColor];
+            self.backgroundColor = [UIColor colorWithWhite:0 alpha:0.1];
+            self.successImage = [UIImage imageNamed:@"ProgressHUD.bundle/success-color.png"];
+            self.errorImage = [UIImage imageNamed:@"ProgressHUD.bundle/error-color.png"];
+            break;
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,7 +102,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[self shared].interaction = YES;
-	[[self shared] hudMake:status imgage:nil spin:YES hide:NO];
+	[[self shared] hudMake:status image:nil spin:YES hide:NO];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -57,7 +110,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[self shared].interaction = Interaction;
-	[[self shared] hudMake:status imgage:nil spin:YES hide:NO];
+	[[self shared] hudMake:status image:nil spin:YES hide:NO];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,15 +118,15 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[self shared].interaction = YES;
-	[[self shared] hudMake:status imgage:HUD_IMAGE_SUCCESS spin:NO hide:YES];
+	[[self shared] hudMake:status image:self.successImage spin:NO hide:YES];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-+ (void)showSuccess:(NSString *)status Interaction:(BOOL)Interaction
++ (void)showSuccess:(NSString *)status interaction:(BOOL)interaction
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	[self shared].interaction = Interaction;
-	[[self shared] hudMake:status imgage:HUD_IMAGE_SUCCESS spin:NO hide:YES];
+	[self shared].interaction = interaction;
+	[[self shared] hudMake:status image::self.successImage spin:NO hide:YES];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -81,15 +134,15 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[self shared].interaction = YES;
-	[[self shared] hudMake:status imgage:HUD_IMAGE_ERROR spin:NO hide:YES];
+	[[self shared] hudMake:status image::self.errorImage spin:NO hide:YES];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-+ (void)showError:(NSString *)status Interaction:(BOOL)Interaction
++ (void)showError:(NSString *)status interaction:(BOOL)interaction
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	[self shared].interaction = Interaction;
-	[[self shared] hudMake:status imgage:HUD_IMAGE_ERROR spin:NO hide:YES];
+	[self shared].interaction = interaction;
+	[[self shared] hudMake:status image:self.errorImage spin:NO hide:YES];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -112,7 +165,7 @@
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)hudMake:(NSString *)status imgage:(UIImage *)img spin:(BOOL)spin hide:(BOOL)hide
+- (void)hudMake:(NSString *)status image:(UIImage *)img spin:(BOOL)spin hide:(BOOL)hide
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[self hudCreate];
@@ -141,7 +194,7 @@
 	{
 		hud = [[UIToolbar alloc] initWithFrame:CGRectZero];
 		hud.translucent = YES;
-		hud.backgroundColor = HUD_BACKGROUND_COLOR;
+		hud.backgroundColor = self.hudBackgroundColor;
 		hud.layer.cornerRadius = 10;
 		hud.layer.masksToBounds = YES;
 		//-----------------------------------------------------------------------------------------------------------------------------------------
@@ -164,7 +217,7 @@
 	if (spinner == nil)
 	{
 		spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-		spinner.color = HUD_SPINNER_COLOR;
+		spinner.color = self.spinnerColor;
 		spinner.hidesWhenStopped = YES;
 	}
 	if (spinner.superview == nil) [hud addSubview:spinner];
@@ -179,7 +232,7 @@
 	{
 		label = [[UILabel alloc] initWithFrame:CGRectZero];
 		label.font = HUD_STATUS_FONT;
-		label.textColor = HUD_STATUS_COLOR;
+		label.textColor = self.statusColor;
 		label.backgroundColor = [UIColor clearColor];
 		label.textAlignment = NSTextAlignmentCenter;
 		label.baselineAdjustment = UIBaselineAdjustmentAlignCenters;
